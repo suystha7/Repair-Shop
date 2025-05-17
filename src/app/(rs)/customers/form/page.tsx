@@ -1,12 +1,13 @@
 import BackButton from "@/components/BackButton";
 import { getCustomer } from "@/lib/queries/getCustomer";
 import * as Sentry from "@sentry/nextjs";
+import CustomerForm from "./CustomerForm";
 
 export const metadata = {
   title: "Customer Form",
 };
 
-export default async function CustomerForm({
+export default async function CustomerFormPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | undefined }>;
@@ -31,8 +32,10 @@ export default async function CustomerForm({
       console.log(customer);
 
       // put customer form comp
+      return <CustomerForm customer={customer} />;
     } else {
       // new customer form comp
+      return <CustomerForm />;
     }
   } catch (e) {
     if (e instanceof Error) {
