@@ -10,8 +10,8 @@ export const insertCustomerSchema = createInsertSchema(customers, {
   email: (field) => field.email("Invalid email address"),
   zip: (field) =>
     field.regex(
-      /^d{5}(-\d{4})?$/,
-      "Invaild Zip code. Use 5 digits followed by a hyphen and 4 digits"
+      /^\d{5}(-\d{4})?$/,
+      "Invaild Zip code. Use 5 digits or 5 digits followed by a hyphen and 4 digits"
     ),
   phone: (field) =>
     field.regex(
