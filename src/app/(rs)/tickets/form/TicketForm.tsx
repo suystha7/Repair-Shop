@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { TextareaWithLabel } from "@/components/inputs/Textarea";
 import { CheckboxWithLabel } from "@/components/inputs/Checkbox";
 import { InputWithLabel } from "@/components/inputs/Input";
+import { SelectWithLabel } from "@/components/inputs/Select";
 
 import {
   insertTicketSchema,
@@ -18,9 +19,21 @@ import { selectCustomerSchemaType } from "@/zod-schema/customer";
 type Props = {
   ticket?: selectTicketSchemaType;
   customer?: selectCustomerSchemaType;
+  techs?: {
+    id: string;
+    description: string;
+  }[];
+  isEditable?: boolean;
 };
 
-export default function TicketForm({ ticket, customer }: Props) {
+export default function TicketForm({
+  ticket,
+  customer,
+  techs,
+  isEditable = true,
+}: Props) {
+  const isManager = Array.isArray(techs);
+
   const defaultValues: insertTicketSchemaType = {
     id: ticket?.id ?? "(New)",
     customerId: ticket?.customerId ?? customer.id,
@@ -58,17 +71,36 @@ export default function TicketForm({ ticket, customer }: Props) {
             <InputWithLabel<insertTicketSchemaType>
               fieldTitle="Title"
               nameInSchema="title"
+              disabled={!isEditable}
             />
-            <InputWithLabel<insertTicketSchemaType>
-              fieldTitle="Tech"
-              nameInSchema="tech"
-              disabled={true}
-            />
-            <CheckboxWithLabel<insertTicketSchemaType>
-              fieldTitle="Completed"
-              nameInSchema="completed"
-              message="Yes"
-            />
+            {isManager ? (
+              <SelectWithLabel<insertTicketSchemaType>
+                fieldTitle="Tech ID"
+                nameInSchema="tech"
+                data={[
+                  {
+                    id: "new-ticket@example.com",
+                    description: "new-ticket@example.com",
+                  },
+                  ...techs,
+                ]}
+              />
+            ) : (
+              <InputWithLabel<insertTicketSchemaType>
+                fieldTitle="Tech"
+                nameInSchema="tech"
+                disabled={true}
+              />
+            )}
+
+            {ticket?.id ? (
+              <CheckboxWithLabel<insertTicketSchemaType>
+                fieldTitle="Completed"
+                nameInSchema="completed"
+                message="Yes"
+                disabled={!isEditable}
+              />
+            ) : null}
 
             <div className="mt-4 space-y-2">
               <h3 className="text-lg">Customer Info</h3>
@@ -92,27 +124,30 @@ export default function TicketForm({ ticket, customer }: Props) {
               fieldTitle="Description"
               nameInSchema="description"
               className="h-96"
+              disabled={!isEditable}
             />
 
-            <div className="flex gap-2">
-              <Button
-                type="submit"
-                className="w-1/2"
-                variant="default"
-                title="Save"
-              >
-                Save
-              </Button>
-              <Button
-                type="button"
-                className="w-1/2"
-                variant="destructive"
-                title="Reset"
-                onClick={() => form.reset(defaultValues)}
-              >
-                Reset
-              </Button>
-            </div>
+            {isEditable ? (
+              <div className="flex gap-2">
+                <Button
+                  type="submit"
+                  className="w-1/2"
+                  variant="default"
+                  title="Save"
+                >
+                  Save
+                </Button>
+                <Button
+                  type="button"
+                  className="w-1/2"
+                  variant="destructive"
+                  title="Reset"
+                  onClick={() => form.reset(defaultValues)}
+                >
+                  Reset
+                </Button>
+              </div>
+            ) : null}
           </div>
         </form>
       </Form>
