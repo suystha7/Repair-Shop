@@ -14,10 +14,7 @@ export async function generateMetadata({
 }) {
   const { customerId, ticketId } = searchParams;
 
-  if (!customerId) return { title: "New Customer" };
-  if (!ticketId) return { title: `Edit Customer #${customerId}` };
-
-  return { title: `Edit Ticket #${ticketId} for Customer #${customerId}` };
+  if (customerId) return { title: "New Ticket" };
 }
 
 export default async function TickerFormPage({
