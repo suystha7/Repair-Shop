@@ -72,13 +72,13 @@ export default function TicketForm({
   });
 
   async function submitForm(data: insertTicketSchemaType) {
-    executeSave({ ...data, title: "", tech: "" });
+    executeSave(data);
   }
 
   return (
     <div className="flex flex-col h-[80vh] gap-6 sm:px-8 justify-center">
       <DisplayServerActionResult result={saveResult} />
-      
+
       <div className="flex items-center justify-center">
         <h2 className="text-2xl font-bold text-center">
           {ticket?.id && isEditable

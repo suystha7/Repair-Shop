@@ -31,7 +31,7 @@ export const saveTicketAction = actionClient
       const isAuth = await isAuthenticated();
 
       if (!isAuth) {
-        redirect("/login");
+        redirect("/tickets");
       }
 
       //   new ticket
