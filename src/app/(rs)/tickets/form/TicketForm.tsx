@@ -57,8 +57,11 @@ export default function TicketForm({
     <div className="flex flex-col h-[80vh] gap-6 sm:px-8 justify-center">
       <div className="flex items-center justify-center">
         <h2 className="text-2xl font-bold text-center">
-          {ticket?.id ? "Edit" : "New"} Ticket{" "}
-          {ticket?.id ? `# ${ticket?.id}` : "Form"}
+          {ticket?.id && isEditable
+            ? `Edit Ticket #${ticket?.id}`
+            : ticket?.id
+            ? `View Ticket #${ticket?.id}`
+            : "New Ticket Form"}
         </h2>
       </div>
 

@@ -14,7 +14,12 @@ export async function generateMetadata({
 }) {
   const { customerId, ticketId } = searchParams;
 
-  if (customerId) return { title: "New Ticket" };
+  if (!customerId && !ticketId)
+    return { title: "Missing Ticket Id or Customer Id" };
+
+  if (customerId) return { title: ` New Ticket for Customer # ${customerId}` };
+
+  if (ticketId) return { title: `Edit Ticket #${ticketId}` };
 }
 
 export default async function TickerFormPage({
@@ -110,7 +115,7 @@ export default async function TickerFormPage({
 
         return <TicketForm customer={customer} ticket={ticket} techs={techs} />;
       } else {
-        const isEditable = user?.email === ticket.tech;
+        const isEditable = user?.email?.toLowerCase() === ticket.tech;
         return (
           <TicketForm
             customer={customer}
