@@ -31,7 +31,7 @@ export const saveCustomerAction = actionClient
       const isAuth = await isAuthenticated();
 
       if (!isAuth) {
-        redirect("/customers");
+        redirect("/login");
       }
 
       //   new customer
