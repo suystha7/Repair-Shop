@@ -16,6 +16,12 @@ import {
 } from "@/zod-schema/ticket";
 import { selectCustomerSchemaType } from "@/zod-schema/customer";
 
+import { useAction } from "next-safe-action/hooks";
+import { saveTicketAction } from "@/app/actions/saveTicketAction";
+import { useToast } from "@/hooks/use-toast";
+import { LoaderCircle } from "lucide-react";
+import { DisplayServerActionResult } from "@/components/DisplayServerAction";
+
 type Props = {
   ticket?: selectTicketSchemaType;
   customer?: selectCustomerSchemaType;
@@ -34,6 +40,8 @@ export default function TicketForm({
 }: Props) {
   const isManager = Array.isArray(techs);
 
+  const { success, error: showError } = useToast();
+
   const defaultValues: insertTicketSchemaType = {
     id: ticket?.id ?? "(New)",
     customerId: ticket?.customerId ?? customer.id,
@@ -49,12 +57,28 @@ export default function TicketForm({
     defaultValues,
   });
 
+  const {
+    execute: executeSave,
+    result: saveResult,
+    isExecuting: isSaving,
+    reset: resetSaveAction,
+  } = useAction(saveTicketAction, {
+    onSuccess({ data }) {
+      success(data?.message || "Ticket saved successfully! 🎉");
+    },
+    onError({ error }) {
+      showError(error?.serverError || "Something went wrong while saving.");
+    },
+  });
+
   async function submitForm(data: insertTicketSchemaType) {
-    console.log(data);
+    executeSave({ ...data, title: "", tech: "" });
   }
 
   return (
     <div className="flex flex-col h-[80vh] gap-6 sm:px-8 justify-center">
+      <DisplayServerActionResult result={saveResult} />
+      
       <div className="flex items-center justify-center">
         <h2 className="text-2xl font-bold text-center">
           {ticket?.id && isEditable
@@ -137,15 +161,25 @@ export default function TicketForm({
                   className="w-1/2"
                   variant="default"
                   title="Save"
+                  disabled={isSaving}
                 >
-                  Save
+                  {isSaving ? (
+                    <>
+                      <LoaderCircle className="animate-spin" /> Saving
+                    </>
+                  ) : (
+                    "Save"
+                  )}
                 </Button>
                 <Button
                   type="button"
                   className="w-1/2"
                   variant="destructive"
                   title="Reset"
-                  onClick={() => form.reset(defaultValues)}
+                  onClick={() => {
+                    form.reset(defaultValues);
+                    resetSaveAction();
+                  }}
                 >
                   Reset
                 </Button>

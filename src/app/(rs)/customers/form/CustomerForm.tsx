@@ -12,6 +12,12 @@ import { StatesArray } from "@/constants/StatesArray";
 
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 
+import { useAction } from "next-safe-action/hooks";
+import { saveCustomerAction } from "@/app/actions/saveCustomerAction";
+import { useToast } from "@/hooks/use-toast";
+import { LoaderCircle } from "lucide-react";
+import { DisplayServerActionResult } from "@/components/DisplayServerAction";
+
 import {
   insertCustomerSchema,
   type insertCustomerSchemaType,
@@ -25,10 +31,8 @@ type Props = {
 export default function CustomerForm({ customer }: Props) {
   const { getPermission, isLoading } = useKindeBrowserClient();
   const isManager = !isLoading && getPermission("manager")?.isGranted;
-  // const permObj = getPermissions();
-  // const isAuthorized =
-  //   !isLoading &&
-  //   permObj.permissions.some((perm) => perm === "manager" || perm === "admin");
+
+  const { success, error: showError } = useToast();
 
   const defaultValues: insertCustomerSchemaType = {
     id: customer?.id ?? 0,
@@ -51,12 +55,28 @@ export default function CustomerForm({ customer }: Props) {
     defaultValues,
   });
 
+  const {
+    execute: executeSave,
+    result: saveResult,
+    isExecuting: isSaving,
+    reset: resetSaveAction,
+  } = useAction(saveCustomerAction, {
+    onSuccess({ data }) {
+      success(data?.message || "Customer saved successfully! 🎉");
+    },
+    onError({ error }) {
+      showError(error?.serverError || "Something went wrong while saving.");
+    },
+  });
+
   async function submitForm(data: insertCustomerSchemaType) {
-    console.log(data);
+    executeSave({ ...data, firstName: "", phone: "" });
   }
 
   return (
     <div className="flex flex-col h-[80vh] gap-6 sm:px-8 justify-center">
+      <DisplayServerActionResult result={saveResult} />
+
       <div className="flex items-center justify-center">
         <h2 className="text-2xl font-bold text-center">
           {customer?.id ? "Edit" : "New"} Customer{" "}
@@ -134,15 +154,25 @@ export default function CustomerForm({ customer }: Props) {
                 className="w-1/2"
                 variant="default"
                 title="Save"
+                disabled={isSaving}
               >
-                Save
+                {isSaving ? (
+                  <>
+                    <LoaderCircle className="animate-spin" /> Saving
+                  </>
+                ) : (
+                  "Save"
+                )}
               </Button>
               <Button
                 type="button"
                 className="w-1/2"
                 variant="destructive"
                 title="Reset"
-                onClick={() => form.reset(defaultValues)}
+                onClick={() => {
+                  form.reset(defaultValues);
+                  resetSaveAction();
+                }}
               >
                 Reset
               </Button>
