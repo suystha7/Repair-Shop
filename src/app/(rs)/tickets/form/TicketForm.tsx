@@ -44,7 +44,7 @@ export default function TicketForm({
 
   const defaultValues: insertTicketSchemaType = {
     id: ticket?.id ?? "(New)",
-    customerId: ticket?.customerId ?? customer.id,
+    customerId: ticket?.customerId ?? customer?.id ?? 0,
     title: ticket?.title ?? "",
     description: ticket?.description ?? "",
     completed: ticket?.completed ?? false,
@@ -64,7 +64,9 @@ export default function TicketForm({
     reset: resetSaveAction,
   } = useAction(saveTicketAction, {
     onSuccess({ data }) {
-      success(data?.message || "Ticket saved successfully! 🎉");
+      if (data?.message) {
+        success(data?.message || "Ticket saved successfully! 🎉");
+      }
     },
     onError({ error }) {
       showError(error?.serverError || "Something went wrong while saving.");
@@ -72,6 +74,7 @@ export default function TicketForm({
   });
 
   async function submitForm(data: insertTicketSchemaType) {
+     console.log("Submitting customer data:", data);
     executeSave(data);
   }
 
@@ -158,7 +161,7 @@ export default function TicketForm({
               <div className="flex gap-2">
                 <Button
                   type="submit"
-                  className="w-1/2"
+                  className="w-1/2 cursor-pointer"
                   variant="default"
                   title="Save"
                   disabled={isSaving}
@@ -173,7 +176,7 @@ export default function TicketForm({
                 </Button>
                 <Button
                   type="button"
-                  className="w-1/2"
+                  className="w-1/2 cursor-pointer"
                   variant="destructive"
                   title="Reset"
                   onClick={() => {

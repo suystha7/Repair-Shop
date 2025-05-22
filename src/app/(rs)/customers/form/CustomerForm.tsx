@@ -72,7 +72,8 @@ export default function CustomerForm({ customer }: Props) {
   });
 
   async function submitForm(data: insertCustomerSchemaType) {
-    executeSave({ ...data, firstName: "", phone: "" });
+     console.log("Submitting customer data:", data);
+    executeSave(data);
   }
 
   return (
@@ -153,7 +154,7 @@ export default function CustomerForm({ customer }: Props) {
             <div className="flex gap-2">
               <Button
                 type="submit"
-                className="w-1/2"
+                className="w-1/2 cursor-pointer"
                 variant="default"
                 title="Save"
                 disabled={isSaving}
@@ -168,7 +169,7 @@ export default function CustomerForm({ customer }: Props) {
               </Button>
               <Button
                 type="button"
-                className="w-1/2"
+                className="w-1/2 cursor-pointer"
                 variant="destructive"
                 title="Reset"
                 onClick={() => {

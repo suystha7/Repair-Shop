@@ -4,7 +4,7 @@ import SearchButton from "@/components/SearchButton";
 
 export default function TicketSearch() {
   return (
-    <Form action="/tickets" className="flex gap-2 items-center justify-end">
+    <Form action="/tickets" className="flex gap-2 items-center justify-end mt-4">
       <Input
         name="searchText"
         type="text"

@@ -2,6 +2,7 @@ import React from "react";
 import TicketSearch from "./TicketSearch";
 import { getTicketSearchResults } from "@/lib/queries/getTicketSearchResults";
 import { getOpenTickets } from "@/lib/queries/getOpenTickets";
+import TicketTable from "./TicketTable";
 
 export const metadata = {
   title: "Ticket Search",
@@ -14,15 +15,19 @@ export default async function Tickets({
 }) {
   const { searchText } = await searchParams;
 
-  if (!searchText){
+  if (!searchText) {
     const results = await getOpenTickets();
     return (
       <>
-      <TicketSearch/>
-      <p>{JSON.stringify(results)}</p>
+        <TicketSearch />
+        {results.length ? (
+          <TicketTable data={results} />
+        ) : (
+          <p>No open tickets found</p>
+        )}
       </>
-    )
-  } 
+    );
+  }
 
   const results = await getTicketSearchResults(searchText);
 
@@ -30,7 +35,11 @@ export default async function Tickets({
   return (
     <>
       <TicketSearch />
-      <p>{JSON.stringify(results)}</p>
+      {results.length ? (
+        <TicketTable data={results} />
+      ) : (
+        <p>No results found</p>
+      )}
     </>
   );
 }

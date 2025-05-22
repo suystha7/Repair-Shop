@@ -12,7 +12,7 @@ export async function generateMetadata({
 }: {
   searchParams: { [key: string]: string | undefined };
 }) {
-  const { customerId, ticketId } = searchParams;
+  const { customerId, ticketId } = await searchParams;
 
   if (!customerId && !ticketId)
     return { title: "Missing Ticket Id or Customer Id" };

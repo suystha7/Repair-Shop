@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { customers } from "@/db/schema";
-import { ilike, or, sql } from "drizzle-orm";
+import { desc, ilike, or, sql } from "drizzle-orm";
 
 export async function getCustomerSearchResults(searchText: string) {
   const results = await db
@@ -20,7 +20,8 @@ export async function getCustomerSearchResults(searchText: string) {
         })) LIKE
         ${`%${searchText?.toLowerCase().replace(" ", "%")}%`}`
       )
-    );
+    )
+    .orderBy(desc(customers?.createdAt), customers?.id);
 
   return results;
 }

@@ -5,7 +5,7 @@ import { flattenValidationErrors } from "next-safe-action";
 import { redirect } from "next/navigation";
 
 import { db } from "@/db";
-import { customers, tickets } from "@/db/schema";
+import { tickets } from "@/db/schema";
 import { actionClient } from "@/lib/safe-action";
 import {
   insertTicketSchema,
@@ -53,7 +53,7 @@ export const saveTicketAction = actionClient
 
       //   existing ticket
       const result = await db
-        .update(customers)
+        .update(tickets)
         .set({
           customerId: ticket.customerId,
           title: ticket?.title,
