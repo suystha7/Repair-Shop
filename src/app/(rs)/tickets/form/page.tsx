@@ -12,14 +12,22 @@ export async function generateMetadata({
 }: {
   searchParams: { [key: string]: string | undefined };
 }) {
-  const { customerId, ticketId } = await searchParams;
+  const customerId = searchParams?.customerId;
+  const ticketId = searchParams?.ticketId;
 
-  if (!customerId && !ticketId)
+  if (!customerId && !ticketId) {
     return { title: "Missing Ticket Id or Customer Id" };
+  }
 
-  if (customerId) return { title: ` New Ticket for Customer # ${customerId}` };
+  if (customerId) {
+    return { title: `New Ticket for Customer #${customerId}` };
+  }
 
-  if (ticketId) return { title: `Edit Ticket #${ticketId}` };
+  if (ticketId) {
+    return { title: `Edit Ticket #${ticketId}` };
+  }
+
+  return { title: "Ticket" };
 }
 
 export default async function TickerFormPage({
