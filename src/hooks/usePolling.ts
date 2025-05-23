@@ -15,5 +15,5 @@ export function usePolling(ms: number = 60000, searchParam: string | null) {
     }, ms);
 
     return () => clearInterval(intervalId);
-  }, [searchParam, ms]);
+  }, [searchParam, ms, router]);
 }

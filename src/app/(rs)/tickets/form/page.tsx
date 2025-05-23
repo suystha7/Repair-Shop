@@ -10,24 +10,16 @@ import { Users, init as kindeInit } from "@kinde/management-api-js";
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | undefined };
+  searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
-  const customerId = searchParams?.customerId;
-  const ticketId = searchParams?.ticketId;
+  const { customerId, ticketId } = await searchParams;
 
-  if (!customerId && !ticketId) {
+  if (!customerId && !ticketId)
     return { title: "Missing Ticket Id or Customer Id" };
-  }
 
-  if (customerId) {
-    return { title: `New Ticket for Customer #${customerId}` };
-  }
+  if (customerId) return { title: ` New Ticket for Customer # ${customerId}` };
 
-  if (ticketId) {
-    return { title: `Edit Ticket #${ticketId}` };
-  }
-
-  return { title: "Ticket" };
+  if (ticketId) return { title: `Edit Ticket #${ticketId}` };
 }
 
 export default async function TickerFormPage({
