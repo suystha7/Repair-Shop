@@ -41,7 +41,7 @@ export function CheckboxWithLabel<S>({
               <Checkbox
                 id={nameInSchema}
                 {...field}
-                checked={field.value}
+                checked={!!field.value}
                 onCheckedChange={field.onChange}
                 disabled={disabled}
               />
