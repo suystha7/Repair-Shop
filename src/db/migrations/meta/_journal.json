@@ -8,6 +8,20 @@
       "when": 1747387569605,
       "tag": "0000_jittery_black_cat",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1748004220548,
+      "tag": "0001_condemned_pandemic",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1748005051464,
+      "tag": "0002_brown_thor_girl",
+      "breakpoints": true
     }
   ]
 }

@@ -24,8 +24,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   ArrowDown,
@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 
 import Filter from "@/components/react-table/Filter";
+import { usePolling } from "@/hooks/usePolling";
 
 type Props = {
   data: selectCustomerSchemaType[];
@@ -45,10 +46,19 @@ type Props = {
 
 export default function CustomerTable({ data }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([
-    { id: "ticketDate", desc: true },
+    { id: "createdAt", desc: true },
   ]);
+
+  usePolling(3000, searchParams.get("searchText"));
+
+  const pageIndex = useMemo(() => {
+    const page = searchParams.get("page");
+    return page ? parseInt(page) - 1 : 0;
+  }, [searchParams]);
 
   const columnHeaderArray: Array<keyof selectCustomerSchemaType> = [
     "firstName",
@@ -57,7 +67,6 @@ export default function CustomerTable({ data }: Props) {
     "phone",
     "city",
     "zip",
-    "active",
     "createdAt",
   ];
 
@@ -116,6 +125,10 @@ export default function CustomerTable({ data }: Props) {
     state: {
       sorting,
       columnFilters,
+      pagination: {
+        pageIndex,
+        pageSize: 10,
+      },
     },
     onColumnFiltersChange: setColumnFilters,
     onSortingChange: setSorting,
@@ -125,6 +138,17 @@ export default function CustomerTable({ data }: Props) {
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  useEffect(() => {
+    const currentPageIndex = table.getState().pagination.pageIndex;
+    const pageCount = table.getPageCount();
+
+    if (pageCount <= currentPageIndex && currentPageIndex > 0) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("page", "1");
+      router.replace(`?${params.toString()}`, { scroll: false });
+    }
+  }, [table, searchParams, router]);
 
   return (
     <div className="mt-6 flex flex-col gap-4">
@@ -145,7 +169,12 @@ export default function CustomerTable({ data }: Props) {
                     </div>
                     {header.column.getCanFilter() ? (
                       <div className="grid place-content-center">
-                        <Filter column={header.column} />
+                        <Filter
+                          column={header.column}
+                          filteredRows={table
+                            .getFilteredRowModel()
+                            .rows.map((row) => row.getValue(header.column.id))}
+                        />
                       </div>
                     ) : null}
                   </TableHead>
@@ -170,7 +199,9 @@ export default function CustomerTable({ data }: Props) {
                   key={row.id}
                   className="cursor-pointer hover:bg-border/25 dark:bg-ring/40"
                   onClick={() =>
-                    router.push(`/tickets/form?ticketId=${row.original?.id}`)
+                    router.push(
+                      `/customers/form?customerId=${row?.original?.id}`
+                    )
                   }
                 >
                   {row.getVisibleCells().map((cell) => (
@@ -188,8 +219,8 @@ export default function CustomerTable({ data }: Props) {
         </Table>
       </div>
 
-      <div className="flex justify-between items-center">
-        <div className="flex basis-1/3 items-center">
+      <div className="flex justify-between items-center gap-1 flex-wrap">
+        <div>
           <p className="whitespace-nowrap font-bold">
             {`Page ${
               table.getState().pagination.pageIndex + 1
@@ -203,40 +234,63 @@ export default function CustomerTable({ data }: Props) {
           </p>
         </div>
 
-        <div className="space-x-2 flex items-center">
-          <Button
-            variant="outline"
-            onClick={() => table.resetSorting()}
-            className="cursor-pointer"
-          >
-            Reset Sorting
-          </Button>
+        <div className="flex flex-row gap-1">
+          <div className="flex flex-row gap-1">
+            <Button
+              variant="outline"
+              onClick={() => router.refresh()}
+              className="cursor-pointer"
+            >
+              Refresh Data
+            </Button>
 
-          <Button
-            variant="outline"
-            onClick={() => table.resetColumnFilters()}
-            className="cursor-pointer"
-          >
-            Reset Filters
-          </Button>
+            <Button
+              variant="outline"
+              onClick={() => table.resetSorting()}
+              className="cursor-pointer"
+            >
+              Reset Sorting
+            </Button>
 
-          <Button
-            variant="outline"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            className="cursor-pointer"
-          >
-            <ChevronLeft />
-          </Button>
+            <Button
+              variant="outline"
+              onClick={() => table.resetColumnFilters()}
+              className="cursor-pointer"
+            >
+              Reset Filters
+            </Button>
+          </div>
 
-          <Button
-            variant="outline"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            className="cursor-pointer"
-          >
-            <ChevronRight />
-          </Button>
+          <div className="flex flex-row gap-1">
+            <Button
+              variant="outline"
+              onClick={() => {
+                const newIndex = table.getState().pagination.pageIndex - 1;
+                table.setPageIndex(newIndex);
+                const params = new URLSearchParams(searchParams.toString());
+                params.set("page", (newIndex + 1).toString());
+                router.replace(`?${params.toString()}`, { scroll: false });
+              }}
+              disabled={!table.getCanPreviousPage()}
+              className="cursor-pointer"
+            >
+              <ChevronLeft />
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                const newIndex = table.getState().pagination.pageIndex + 1;
+                table.setPageIndex(newIndex);
+                const params = new URLSearchParams(searchParams.toString());
+                params.set("page", (newIndex + 1).toString());
+                router.replace(`?${params.toString()}`, { scroll: false });
+              }}
+              disabled={!table.getCanNextPage()}
+              className="cursor-pointer"
+            >
+              <ChevronRight />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

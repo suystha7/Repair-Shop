@@ -141,7 +141,7 @@ export default function TicketForm({
               <p>{customer?.address1}</p>
               {customer?.address2 ? <p>{customer?.address2}</p> : null}
               <p>
-                {customer?.city}, {customer?.state} {customer?.zip}
+                {customer?.city}, {customer?.country} {customer?.zip}
               </p>
               <hr className="w-4/5" />
               <p>{customer?.email}</p>
