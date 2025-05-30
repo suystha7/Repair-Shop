@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { customers } from "@/db/schema";
-import { desc, ilike, or, sql } from "drizzle-orm";
+import { ilike, or, sql } from "drizzle-orm";
 
 export async function getCustomerSearchResults(searchText: string) {
   const results = await db
@@ -21,7 +21,7 @@ export async function getCustomerSearchResults(searchText: string) {
         ${`%${searchText?.toLowerCase().replace(" ", "%")}%`}`
       )
     )
-    .orderBy(desc(customers?.createdAt), customers?.id);
+    .orderBy(customers?.firstName)
 
   return results;
 }

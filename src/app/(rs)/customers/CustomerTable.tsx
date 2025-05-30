@@ -1,8 +1,8 @@
 "use client";
 
 import type { selectCustomerSchemaType } from "@/zod-schema/customer";
-
 import {
+  CellContext,
   createColumnHelper,
   flexRender,
   getCoreRowModel,
@@ -24,9 +24,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useMemo, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+
 import {
   ArrowDown,
   ArrowUp,
@@ -35,6 +46,7 @@ import {
   ChevronLeft,
   ChevronRight,
   XCircle,
+  MoreVertical,
 } from "lucide-react";
 
 import Filter from "@/components/react-table/Filter";
@@ -72,52 +84,95 @@ export default function CustomerTable({ data }: Props) {
 
   const columnHelper = createColumnHelper<selectCustomerSchemaType>();
 
-  const columns = columnHeaderArray.map((columnName) =>
-    columnHelper.accessor((row) => row[columnName], {
-      id: columnName,
-      header: ({ column }) => {
-        return (
+  const ActionsCell = ({
+    row,
+  }: CellContext<selectCustomerSchemaType, unknown>) => {
+    return (
+      <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full cursor-pointer"
+            >
+              <MoreVertical className="h-4 w-4" />
+              <span className="sr-only">Open Menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="cursor-pointer" asChild>
+              <Link
+                href={`/tickets/form?customerId=${row.original.id}`}
+                className="w-full"
+                prefetch={false}
+              >
+                New Ticket
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="cursor-pointer" asChild>
+              <Link
+                href={`/customers/form?customerId=${row.original.id}`}
+                className="w-full"
+                prefetch={false}
+              >
+                Edit Customer
+              </Link>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  };
+
+  const columns = [
+    ...columnHeaderArray.map((columnName) =>
+      columnHelper.accessor((row) => row[columnName], {
+        id: columnName,
+        header: ({ column }) => (
           <Button
             variant="ghost"
             className="pl-1 w-full flex justify-between cursor-pointer"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             {columnName[0].toUpperCase() + columnName.slice(1)}
-
-            {column.getIsSorted() === "desc" && (
+            {column.getIsSorted() === "desc" ? (
               <ArrowDown className="ml-2 h-4 w-4" />
-            )}
-
-            {column.getIsSorted() === "asc" && (
+            ) : column.getIsSorted() === "asc" ? (
               <ArrowUp className="ml-2 h-4 w-4" />
+            ) : (
+              <ArrowUpDown className="ml-2 h-4 w-4" />
             )}
-
-            {column.getIsSorted() !== "desc" &&
-              column.getIsSorted() !== "asc" && (
-                <ArrowUpDown className="ml-2 h-4 w-4" />
-              )}
           </Button>
-        );
-      },
-      cell: (info) => {
-        const value = info.getValue();
+        ),
+        cell: (info) => {
+          const value = info.getValue();
 
-        if (columnName === "active") {
-          return value ? (
-            <CheckCircle className="text-green-500 w-5 h-5" />
-          ) : (
-            <XCircle className="text-red-500 w-5 h-5" />
-          );
-        }
+          if (columnName === "active") {
+            return value ? (
+              <CheckCircle className="text-green-500 w-5 h-5" />
+            ) : (
+              <XCircle className="text-red-500 w-5 h-5" />
+            );
+          }
 
-        if (columnName === "createdAt" && value instanceof Date) {
-          return value.toISOString().split("T")[0];
-        }
+          if (columnName === "createdAt" && value instanceof Date) {
+            return value.toISOString().split("T")[0];
+          }
 
-        return String(value ?? "");
-      },
-    })
-  );
+          return String(value ?? "");
+        },
+      })
+    ),
+    columnHelper.display({
+      id: "actions",
+      cell: ActionsCell,
+    }),
+  ];
 
   const table = useReactTable({
     data,
@@ -127,7 +182,7 @@ export default function CustomerTable({ data }: Props) {
       columnFilters,
       pagination: {
         pageIndex,
-        pageSize: 10,
+        pageSize: 8,
       },
     },
     onColumnFiltersChange: setColumnFilters,
@@ -148,17 +203,22 @@ export default function CustomerTable({ data }: Props) {
       params.set("page", "1");
       router.replace(`?${params.toString()}`, { scroll: false });
     }
-  }, [table, searchParams, router]);
+  }, [table.getState().columnFilters]); //eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="mt-6 flex flex-col gap-4">
-      <div className="mt-6 rounded-lg overflow-hidden border border-border">
+      <div className="rounded-lg overflow-hidden border border-border">
         <Table className="border">
           <TableHeader>
             {table.getHeaderGroups().map((headerGrp) => (
               <TableRow key={headerGrp.id}>
-                {headerGrp?.headers.map((header) => (
-                  <TableHead key={header.id} className="bg-secondary p-1">
+                {headerGrp.headers.map((header) => (
+                  <TableHead
+                    key={header.id}
+                    className={`bg-secondary p-1 ${
+                      header.id === "actions" ? "w-12" : ""
+                    }`}
+                  >
                     <div>
                       {header.isPlaceholder
                         ? null
@@ -197,12 +257,12 @@ export default function CustomerTable({ data }: Props) {
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className="cursor-pointer hover:bg-border/25 dark:bg-ring/40"
-                  onClick={() =>
-                    router.push(
-                      `/customers/form?customerId=${row?.original?.id}`
-                    )
-                  }
+                  className="hover:bg-border/25 dark:bg-ring/40"
+                  onClick={(e) => {
+                    const target = e.target as HTMLElement;
+                    if (target.closest("[data-ignore-row-click]")) return;
+                    // Add row click logic if needed
+                  }}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="border">
@@ -220,77 +280,70 @@ export default function CustomerTable({ data }: Props) {
       </div>
 
       <div className="flex justify-between items-center gap-1 flex-wrap">
-        <div>
-          <p className="whitespace-nowrap font-bold">
-            {`Page ${
-              table.getState().pagination.pageIndex + 1
-            } of ${table.getPageCount()}`}
-            &nbsp;&nbsp;
-            {`[${table.getFilteredRowModel().rows.length} ${
-              table.getFilteredRowModel().rows.length !== 1
-                ? "total results"
-                : "result"
-            }]`}
-          </p>
-        </div>
+        <p className="whitespace-nowrap font-bold">
+          {`Page ${
+            table.getState().pagination.pageIndex + 1
+          } of ${table.getPageCount()}`}{" "}
+          &nbsp;&nbsp;
+          {`[${table.getFilteredRowModel().rows.length} ${
+            table.getFilteredRowModel().rows.length !== 1
+              ? "total results"
+              : "result"
+          }]`}
+        </p>
 
-        <div className="flex flex-row gap-1">
-          <div className="flex flex-row gap-1">
-            <Button
-              variant="outline"
-              onClick={() => router.refresh()}
-              className="cursor-pointer"
-            >
-              Refresh Data
-            </Button>
+        <div className="flex flex-wrap gap-1">
+          <Button
+            variant="outline"
+            className="cursor-pointer"
+            onClick={() => router.refresh()}
+          >
+            Refresh Data
+          </Button>
+          <Button
+            variant="outline"
+            className="cursor-pointer"
+            onClick={() => table.resetSorting()}
+          >
+            Reset Sorting
+          </Button>
+          <Button
+            variant="outline"
+            className="cursor-pointer"
+            onClick={() => table.resetColumnFilters()}
+          >
+            Reset Filters
+          </Button>
 
-            <Button
-              variant="outline"
-              onClick={() => table.resetSorting()}
-              className="cursor-pointer"
-            >
-              Reset Sorting
-            </Button>
+          <Button
+            variant="outline"
+            className="cursor-pointer"
+            onClick={() => {
+              const newIndex = table.getState().pagination.pageIndex - 1;
+              table.setPageIndex(newIndex);
+              const params = new URLSearchParams(searchParams.toString());
+              params.set("page", (newIndex + 1).toString());
+              router.replace(`?${params.toString()}`, { scroll: false });
+            }}
+            disabled={!table.getCanPreviousPage()}
+          >
+            <ChevronLeft />
+          </Button>
 
-            <Button
-              variant="outline"
-              onClick={() => table.resetColumnFilters()}
-              className="cursor-pointer"
-            >
-              Reset Filters
-            </Button>
-          </div>
-
-          <div className="flex flex-row gap-1">
-            <Button
-              variant="outline"
-              onClick={() => {
-                const newIndex = table.getState().pagination.pageIndex - 1;
-                table.setPageIndex(newIndex);
-                const params = new URLSearchParams(searchParams.toString());
-                params.set("page", (newIndex + 1).toString());
-                router.replace(`?${params.toString()}`, { scroll: false });
-              }}
-              disabled={!table.getCanPreviousPage()}
-              className="cursor-pointer"
-            >
-              <ChevronLeft />
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                const newIndex = table.getState().pagination.pageIndex + 1;
-                table.setPageIndex(newIndex);
-                const params = new URLSearchParams(searchParams.toString());
-                params.set("page", (newIndex + 1).toString());
-                router.replace(`?${params.toString()}`, { scroll: false });
-              }}
-              disabled={!table.getCanNextPage()}
-              className="cursor-pointer"
-            >
-              <ChevronRight />
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            className="cursor-pointer"
+            onClick={() => {
+              const newIndex = table.getState().pagination.pageIndex + 1;
+              table.setPageIndex(newIndex);
+              const params = new URLSearchParams(searchParams.toString());
+              params.set("page", (newIndex + 1).toString());
+              router.replace(`?${params.toString()}`, { scroll: false });
+            }}
+            disabled={!table.getCanNextPage()}
+          >
+            <ChevronRight />
+          </Button>
         </div>
       </div>
     </div>

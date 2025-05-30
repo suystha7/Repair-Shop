@@ -31,7 +31,7 @@ export async function getTicketSearchResults(searchText: string) {
         ${`%${searchText?.toLowerCase().replace(" ", "%")}%`}`
       )
     )
-    .orderBy(desc(tickets?.createdAt));
+    .orderBy(desc(tickets?.createdAt))
 
   return results;
 }

@@ -21,6 +21,8 @@ import { saveTicketAction } from "@/app/actions/saveTicketAction";
 import { useToast } from "@/hooks/use-toast";
 import { LoaderCircle } from "lucide-react";
 import { DisplayServerActionResult } from "@/components/DisplayServerAction";
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 
 type Props = {
   ticket?: selectTicketSchemaType;
@@ -30,6 +32,7 @@ type Props = {
     description: string;
   }[];
   isEditable?: boolean;
+  isManager?: boolean | undefined;
 };
 
 export default function TicketForm({
@@ -37,19 +40,33 @@ export default function TicketForm({
   customer,
   techs,
   isEditable = true,
+  isManager = false,
 }: Props) {
-  const isManager = Array.isArray(techs);
-
   const { success, error: showError } = useToast();
 
-  const defaultValues: insertTicketSchemaType = {
-    id: ticket?.id ?? "(New)",
-    customerId: ticket?.customerId ?? customer?.id ?? 0,
-    title: ticket?.title ?? "",
-    description: ticket?.description ?? "",
-    completed: ticket?.completed ?? false,
-    tech: ticket?.tech ?? "new-ticket@example.com",
+  const searchParams = useSearchParams();
+
+  const hasTicketId = searchParams.has("id");
+
+  const emptyValues: insertTicketSchemaType = {
+    id: "(New)",
+    customerId: 0,
+    title: "",
+    description: "",
+    completed: false,
+    tech: "new-ticket@example.com",
   };
+
+  const defaultValues: insertTicketSchemaType = hasTicketId
+    ? {
+        id: ticket?.id ?? "(New)",
+        customerId: ticket?.customerId ?? customer?.id ?? 0,
+        title: ticket?.title ?? "",
+        description: ticket?.description ?? "",
+        completed: ticket?.completed ?? false,
+        tech: ticket?.tech.toLowerCase() ?? "new-ticket@example.com",
+      }
+    : emptyValues;
 
   const form = useForm<insertTicketSchemaType>({
     mode: "onBlur",
@@ -57,6 +74,10 @@ export default function TicketForm({
     defaultValues,
   });
 
+  useEffect(() => {
+    form.reset(hasTicketId ? defaultValues : emptyValues);
+  }, [searchParams.get("id")]); //eslint-disable-line react-hooks/exhaustive-deps
+ 
   const {
     execute: executeSave,
     result: saveResult,
@@ -74,7 +95,7 @@ export default function TicketForm({
   });
 
   async function submitForm(data: insertTicketSchemaType) {
-     console.log("Submitting customer data:", data);
+    console.log("Submitting customer data:", data);
     executeSave(data);
   }
 
@@ -103,7 +124,7 @@ export default function TicketForm({
               nameInSchema="title"
               disabled={!isEditable}
             />
-            {isManager ? (
+            {isManager && techs ? (
               <SelectWithLabel<insertTicketSchemaType>
                 fieldTitle="Tech ID"
                 nameInSchema="tech"
@@ -141,7 +162,7 @@ export default function TicketForm({
               <p>{customer?.address1}</p>
               {customer?.address2 ? <p>{customer?.address2}</p> : null}
               <p>
-                {customer?.city}, {customer?.country} {customer?.zip}
+                {customer?.city}, {customer?.state} {customer?.zip}
               </p>
               <hr className="w-4/5" />
               <p>{customer?.email}</p>

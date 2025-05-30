@@ -163,7 +163,7 @@ export default function TicketTable({ data }: Props) {
       params.set("page", "1");
       router.replace(`?${params.toString()}`, { scroll: false });
     }
-  }, [router, searchParams, table]);
+  }, [table.getState().columnFilters]);//eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="mt-6 flex flex-col gap-4">
