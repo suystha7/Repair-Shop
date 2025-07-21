@@ -104,7 +104,7 @@ export default function CustomerTable({ data }: Props) {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer" asChild>
+            <DropdownMenuItem className="cursor-pointer" asChild>x
               <Link
                 href={`/tickets/form?customerId=${row.original.id}`}
                 className="w-full"
